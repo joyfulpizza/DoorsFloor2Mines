@@ -191,14 +191,6 @@ VisualTab:CreateToggle({ Name="ESP Entities (A-60 / A-90 / A-120)", CurrentValue
 VisualTab:CreateToggle({ Name="ESP Players", CurrentValue=false, Callback=function(v) ESP_Players=v if not v then clearESP("Player") end end })
 VisualTab:CreateToggle({ Name="ESP Lockers", CurrentValue=false, Callback=function(v) ESP_Lockers=v if not v then clearESP("Locker") end end })
 VisualTab:CreateToggle({ Name="ESP Exit Doors", CurrentValue=false, Callback=function(v) ESP_Doors=v if not v then clearESP("Door") end end })
-VisualTab:CreateButton({
-    Name = "🌕 FullBright",
-    Callback = function()
-        if getgenv().DoorsFullbright then
-            getgenv().DoorsFullbright()
-        end
-    end
-})
 
 Rayfield:Notify({
     Title = "DOORS – ROOMS",
