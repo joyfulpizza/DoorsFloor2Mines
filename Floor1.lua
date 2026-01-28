@@ -336,6 +336,14 @@ VisualTab:CreateToggle({ Name="ESP Figure Books", CurrentValue=false, Callback=f
 VisualTab:CreateToggle({ Name="ESP Levers", CurrentValue=false, Callback=function(v) ESP_Levers=v if not v then clearESPTag("Lever") end end })
 VisualTab:CreateToggle({ Name="ESP Doors", CurrentValue=false, Callback=function(v) ESP_Doors=v if not v then clearESPTag("Door") end end })
 VisualTab:CreateToggle({ Name="ESP Keys", CurrentValue=false, Callback=function(v) ESP_Keys=v if not v then clearESPTag("Key") end end })
+VisualTab:CreateButton({
+    Name = "🌕 FullBright",
+    Callback = function()
+        if getgenv().DoorsFullbright then
+            getgenv().DoorsFullbright()
+        end
+    end
+})
 
 MiscTab:CreateToggle({
     Name = "Chat Entity Notifications",
