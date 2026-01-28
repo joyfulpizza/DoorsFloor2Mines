@@ -1,50 +1,92 @@
--- DOORS | AUTO FLOOR LOADER (HOTEL / MINES)
+-- DOORS | UNIVERSAL AUTO LOADER (HOTEL / MINES / DETOUR / ROOMS)
 
 --------------------------------------------------
 -- SERVICES
 --------------------------------------------------
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
 
 --------------------------------------------------
--- SCRIPT LINKS
+-- NOTIFY
 --------------------------------------------------
-local FLOOR1_SCRIPT = "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/Floor1.lua"
-local FLOOR2_SCRIPT = "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/Floor2.lua"
+local function notify(txt)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "DOORS | Loader",
+            Text = txt,
+            Duration = 4
+        })
+    end)
+end
+
+--------------------------------------------------
+-- GLOBAL FULLBRIGHT (SHARED)
+--------------------------------------------------
+getgenv().DoorsFullbright = function()
+    Lighting.Brightness = 2
+    Lighting.ClockTime = 14
+    Lighting.FogEnd = 1e9
+    Lighting.GlobalShadows = false
+end
 
 --------------------------------------------------
 -- FLOOR DETECTION
 --------------------------------------------------
-local function isMines()
-    for _,v in pairs(Workspace:GetDescendants()) do
-        local n = v.Name
-        if n == "Grumble"
-        or n == "Giggle"
-        or n == "Snare"
-        or n == "SeekMoving"
-        or n:lower():find("mine")
-        or n:lower():find("fuse")
-        or n:lower():find("battery") then
-            return true
+local function detectArea()
+    -- 🟥 ROOMS (A-000 → A-1000)
+    for _,v in ipairs(Workspace:GetDescendants()) do
+        if v.Name == "A60" or v.Name == "A90" or v.Name == "A120" then
+            return "Rooms"
         end
     end
-    return false
+
+    -- 🟪 DETOUR / BACKDOOR
+    if Workspace:FindFirstChild("Backdoor")
+    or Workspace:FindFirstChild("Haste")
+    or Workspace:FindFirstChild("TimerLever") then
+        return "Detour"
+    end
+
+    -- ⛏️ FLOOR 2 – MINES
+    if Workspace:FindFirstChild("Mines")
+    or Workspace:FindFirstChild("Minecart")
+    or Workspace:FindFirstChild("AnchorRoom") then
+        return "Mines"
+    end
+
+    -- 🏨 FLOOR 1 – HOTEL
+    return "Hotel"
 end
 
 --------------------------------------------------
--- WAIT FOR GAME
+-- LOAD CORRECT SCRIPT
 --------------------------------------------------
-repeat task.wait() until LocalPlayer.Character
-task.wait(1)
+local Area = detectArea()
+notify("Detected: "..Area)
+
+if Area == "Hotel" then
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/Floor1.lua"
+    ))()
+
+elseif Area == "Mines" then
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/Floor2.lua"
+    ))()
+
+elseif Area == "Detour" then
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/The%20backdoors(detour)"
+    ))()
+
+elseif Area == "Rooms" then
+    loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/joyfulpizza/DoorsFloor2Mines/refs/heads/main/A-000%20%7E%20A-1000.lua"
+    ))()
+end
 
 --------------------------------------------------
--- LOAD CORRECT FLOOR
+-- FULLBRIGHT NOTICE
 --------------------------------------------------
-if isMines() then
-    warn("[DOORS] Floor 2 detected (The Mines)")
-    loadstring(game:HttpGet(FLOOR2_SCRIPT))()
-else
-    warn("[DOORS] Floor 1 detected (Hotel)")
-    loadstring(game:HttpGet(FLOOR1_SCRIPT))()
-end
+notify("Use FullBright button in Visuals 🌕")
