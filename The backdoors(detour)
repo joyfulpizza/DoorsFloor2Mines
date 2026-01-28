@@ -158,6 +158,14 @@ VisualTab:CreateToggle({
     CurrentValue = false,
     Callback = function(v) ESP_Levers = v if not v then clearTag("Lever") end end
 })
+VisualTab:CreateButton({
+    Name = "🌕 FullBright",
+    Callback = function()
+        if getgenv().DoorsFullbright then
+            getgenv().DoorsFullbright()
+        end
+    end
+})
 
 Rayfield:Notify({
     Title = "DOORS | DETOUR",
