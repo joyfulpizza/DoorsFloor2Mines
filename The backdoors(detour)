@@ -1,130 +1,56 @@
--- DOORS | DETOUR (BACKDOOR)
+-- Detour.lua
+local Workspace=game:GetService("Workspace")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+local StarterGui=game:GetService("StarterGui")
 
---------------------------------------------------
--- SERVICES
---------------------------------------------------
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local StarterGui = game:GetService("StarterGui")
-local LocalPlayer = Players.LocalPlayer
+local Rayfield=loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Window=Rayfield:CreateWindow({Name="DOORS | Detour"})
+local MainTab=Window:CreateTab("🧠 Main")
+local VisualTab=Window:CreateTab("👁️ Visuals")
+local ESP_Entities=false
+local EntityNotify=false
+local ESPBoxes={}
 
---------------------------------------------------
--- RAYFIELD
---------------------------------------------------
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
---------------------------------------------------
--- WINDOW
---------------------------------------------------
-local Window = Rayfield:CreateWindow({
-    Name = "DOORS | DETOUR",
-    LoadingTitle = "DOORS – Backdoor",
-    LoadingSubtitle = "Timer Survival Helper",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "DoorsRayfield",
-        FileName = "DetourConfig"
-    }
-})
-
-local MainTab   = Window:CreateTab("⏱️ Main", 4483362458)
-local VisualTab = Window:CreateTab("👁️ Visuals", 4483362458)
-
---------------------------------------------------
--- FLAGS
---------------------------------------------------
-local ESP_Doors   = false
-local ESP_Lockers = false
-local ESP_Entity  = false
-local ESP_Levers  = false
-local EntityNotify = false
-
---------------------------------------------------
--- ESP STORAGE
---------------------------------------------------
-local ESPList = {}
-
---------------------------------------------------
--- UTILS
---------------------------------------------------
 local function notify(txt)
-    pcall(function()
-        StarterGui:SetCore("SendNotification", {
-            Title = "DOORS | DETOUR",
-            Text = txt,
-            Duration = 4
-        })
-    end)
+    pcall(function() StarterGui:SetCore("SendNotification",{Title="DOORS",Text=txt,Duration=4}) end)
 end
 
-local function clearTag(tag)
-    for i = #ESPList, 1, -1 do
-        if ESPList[i].Tag == tag then
-            ESPList[i].Box:Destroy()
-            table.remove(ESPList, i)
-        end
+local function clearESP(tag)
+    for i=#ESPBoxes,1,-1 do
+        local v=ESPBoxes[i]
+        if v.Tag==tag then if v.Box then v.Box:Destroy() end table.remove(ESPBoxes,i) end
     end
 end
 
-local function createESP(part, color, tag)
-    if not part or not part:IsA("BasePart") then return end
-    local box = Instance.new("BoxHandleAdornment")
-    box.Adornee = part
-    box.Size = part.Size
-    box.Color3 = color
-    box.Transparency = 0.5
-    box.AlwaysOnTop = true
-    box.ZIndex = 10
-    box.Parent = part
-    table.insert(ESPList, {Box = box, Tag = tag})
+local function createESP(model,color,tag)
+    if model and model:FindFirstChild("HumanoidRootPart") then
+        local hrp = model.HumanoidRootPart
+        local box = Instance.new("BoxHandleAdornment")
+        box.Adornee = hrp
+        box.Size = hrp.Size
+        box.Color3 = color
+        box.Transparency = 0.5
+        box.AlwaysOnTop = true
+        box.ZIndex = 10
+        box.Parent = hrp
+        table.insert(ESPBoxes,{Box=box,Tag=tag})
+    end
 end
 
---------------------------------------------------
--- ENTITY DETECTION
---------------------------------------------------
-Workspace.ChildAdded:Connect(function(obj)
-    if obj.Name == "Blitz" then
-        if EntityNotify then notify("⚠️ Blitz spawned!") end
-    elseif obj.Name == "Lookman" then
-        if EntityNotify then notify("👁️ Lookman watching!") end
-    elseif obj.Name == "Haste" then
-        if EntityNotify then notify("⏱️ Haste active!") end
+Workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Model") and obj:FindFirstChild("HumanoidRootPart") and obj~=LocalPlayer.Character and EntityNotify then
+        notify(obj.Name.." spawned!")
     end
 end)
 
---------------------------------------------------
--- INCREMENTAL ESP REFRESH
---------------------------------------------------
 task.spawn(function()
     while task.wait(0.15) do
-        if ESP_Doors then
-            clearTag("Door")
-            for _,r in pairs(Workspace:GetDescendants()) do
-                if r.Name == "Door" then
-                    local p = r:FindFirstChildWhichIsA("BasePart")
-                    if p then createESP(p, Color3.fromRGB(0,255,150), "Door") end
-                    task.wait()
-                end
-            end
-        end
-
-        if ESP_Lockers then
-            clearTag("Locker")
-            for _,p in pairs(Workspace:GetDescendants()) do
-                if p.Name == "HidePrompt" then
-                    local part = p.Parent:FindFirstChildWhichIsA("BasePart")
-                    if part then createESP(part, Color3.fromRGB(0,170,255), "Locker") end
-                    task.wait()
-                end
-            end
-        end
-
-        if ESP_Levers then
-            clearTag("Lever")
-            for _,p in pairs(Workspace:GetDescendants()) do
-                if p.Name == "TimerLever" or p.Name == "ActivatePrompt" then
-                    local part = p.Parent:FindFirstChildWhichIsA("BasePart")
-                    if part then createESP(part, Color3.fromRGB(255,200,0), "Lever") end
+        if ESP_Entities then
+            clearESP("Entity")
+            for _,v in pairs(Workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") and v~=LocalPlayer.Character then
+                    createESP(v,Color3.fromRGB(255,0,0),"Entity")
                     task.wait()
                 end
             end
@@ -132,43 +58,10 @@ task.spawn(function()
     end
 end)
 
---------------------------------------------------
--- UI
---------------------------------------------------
-MainTab:CreateToggle({
-    Name = "Entity Notifications",
-    CurrentValue = false,
-    Callback = function(v) EntityNotify = v end
-})
+MainTab:CreateToggle({Name="Entity Notifications",CurrentValue=false,Callback=function(v) EntityNotify=v end})
+VisualTab:CreateToggle({Name="ESP Entities",CurrentValue=false,Callback=function(v) ESP_Entities=v if not v then clearESP("Entity") end end})
 
-VisualTab:CreateToggle({
-    Name = "ESP Doors",
-    CurrentValue = false,
-    Callback = function(v) ESP_Doors = v if not v then clearTag("Door") end end
-})
-
-VisualTab:CreateToggle({
-    Name = "ESP Lockers",
-    CurrentValue = false,
-    Callback = function(v) ESP_Lockers = v if not v then clearTag("Locker") end end
-})
-
-VisualTab:CreateToggle({
-    Name = "ESP Timer Levers",
-    CurrentValue = false,
-    Callback = function(v) ESP_Levers = v if not v then clearTag("Lever") end end
-})
-VisualTab:CreateButton({
-    Name = "🌕 FullBright",
-    Callback = function()
-        if getgenv().DoorsFullbright then
-            getgenv().DoorsFullbright()
-        end
-    end
-})
-
-Rayfield:Notify({
-    Title = "DOORS | DETOUR",
-    Content = "Detour helper loaded ✔️",
-    Duration = 4
-})
+local CreditTab = Window:CreateTab("⭐ Credits")
+CreditTab:CreateButton({Name="Credits",Callback=function()
+    Rayfield:Notify({Title="Credits",Content="Made by @joyful_pizzapartyl",Duration=5})
+end})
